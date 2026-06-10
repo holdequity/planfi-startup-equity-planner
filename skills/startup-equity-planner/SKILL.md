@@ -45,7 +45,10 @@ the session already has a model or the user wants a sharable artifact.
 
 ## Step 2 — Route by intent
 
-### "Should I file an 83(b)? / how much will QSBS exclude on my exit?" → `analyze_startup_equity`
+### "Should I file an 83(b)?" / "is the 83(b) worth it on my founder shares / options?" / "how much will QSBS exclude on my exit?" / "what's my tax if I sell my pre-IPO stock after 5 years?" / "early-exercise: file the election or not?" → `analyze_startup_equity`
+
+**Always CALL `analyze_startup_equity` for these — do not answer from general knowledge or quote a §1202 cap, an 83(b) rule of thumb, or a holding-period rule from memory.** When the user gives the numbers (shares, FMV, expected sale price, filing status), run the tool and lead with its real output — the 83(b) recommendation, the QSBS excluded gain, and net proceeds — THEN explain. The exclusion caps, regime cutover, exclusion-percent tiers, and federal/NIIT/state math are all version-sensitive and live server-side; reciting them from memory will be wrong.
+
 The primary tool. Models the irreversible 30-day 83(b) early-exercise election (compares
 83(b)-elected vs no-election lifetime tax, shows the ordinary→LTCG conversion and the holding-clock
 start) AND the §1202 QSBS gain exclusion (resolves the OBBBA vs legacy regime from the acquisition
@@ -74,13 +77,19 @@ analyze_startup_equity({
 })
 ```
 
-### "When does AMT kick in if I early-exercise these ISOs?" → `analyze_iso_amt_crossover`
+### "When does AMT kick in if I early-exercise these ISOs?" / "how many ISOs can I exercise-and-hold before I owe AMT?" / "what's my AMT-safe exercise amount this year?" / "will exercising trigger alternative minimum tax?" → `analyze_iso_amt_crossover`
+
+**Always CALL `analyze_iso_amt_crossover` for these — do not answer from general knowledge or estimate the AMT crossover, exemption, or phaseout from memory.** When the user gives their ordinary income (and ideally the per-share bargain element), run the tool and lead with the real `crossover_bargain_element` and `amt_at_crossover`, THEN explain. AMT exemptions, phaseouts, and rates are version-sensitive and live server-side.
+
 For ISO early-exercise, find how much bargain element you can exercise-and-hold before triggering AMT
 before running `analyze_startup_equity`. Returns the `crossover_bargain_element`, `amt_at_crossover`,
 and a sensitivity table. REQUIRED: `ordinary_taxable_income`. Optional: `filing_status`,
 `per_share_bargain` (FMV − strike, to get a `shares_estimate`), `tax_year`, `plan_id`.
 
-### "Value / tax all my grants (RSUs, ISOs, NSOs, ESPP)" → `analyze_equity_compensation`
+### "Value / tax all my grants (RSUs, ISOs, NSOs, ESPP)" / "what are my equity grants worth?" / "how will my RSUs / options be taxed?" / "break down the tax across all my grant types" → `analyze_equity_compensation`
+
+**Always CALL `analyze_equity_compensation` for these — do not answer from general knowledge or hand-compute grant value or tax treatment from memory.** When the user describes their grants, run the tool and lead with its per-grant valuation and tax output, THEN explain.
+
 For broader per-grant valuation and tax treatment across grant types (not just the 83(b)/QSBS
 decision), route to `analyze_equity_compensation`. REQUIRED: `grants[]` — each
 `{ type, shares, grant_price_per_share }`.
